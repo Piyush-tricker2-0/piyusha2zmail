@@ -1,12 +1,13 @@
 {
-  "name": "piyush-a2z-mail",
+  "name": "piyusha2zmail",
   "version": "1.0.0",
+  "description": "Temp Mail Project",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "node-fetch": "^3.4.0"
+    "node-fetch": "^2.6.7"
   }
 }
