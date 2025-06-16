@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Piyush A2Z Mail</title>
+  <style>
+    body { font-family: Arial; background: #101010; color: white; text-align: center; }
+    #email { font-size: 1.5rem; margin: 20px; }
+    #inbox { margin-top: 30px; }
+    .mail { background: #222; padding: 10px; margin: 10px auto; border-radius: 5px; width: 90%; }
+  </style>
+</head>
+<body>
+  <h1>Piyush A2Z Temporary Mail</h1>
+  <p id="email">Generating email...</p>
+  <button onclick="loadMails()">Check Inbox</button>
+  <div id="inbox">Inbox loading...</div>
+
+<script>
+let token = "", email = "", password = "";
+async function createAccount() {
+  password = Math.random().toString(36).substring(2, 12);
+  const domains = await (await fetch("https://api.mail.tm/domains")).json();
+  const domain = domains["hydra:member"][0].domain;
+  email = Math.random().toString(36).substring(2, 10) + "@" + domain;
+  document.getElementById("email").innerText = "📧 " + email;
+
+  await fetch("https://api.mail.tm/accounts", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address: email, password })
+  });
+
+  const res = await fetch("https://api.mail.tm/token", {
+    method: "POST",
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ address: email, password })
+  });
+
+  const data = await res.json();
+  token = data.token;
+  loadMails();
+}
+
+async function loadMails() {
+  document.getElementById("inbox").innerText = "Checking for messages...";
+  const res = await fetch("https://api.mail.tm/messages", {
+    headers: { Authorization: "Bearer " + token }
+  });
+  const data = await res.json();
+  let inbox = "";
+  if (data["hydra:member"].length === 0) {
+    inbox = "<p>No mails yet. Try again later.</p>";
+  } else {
+    data["hydra:member"].forEach(mail => {
+      inbox += `<div class="mail"><strong>From:</strong> ${mail.from.address}<br><strong>Subject:</strong> ${mail.subject}</div>`;
+    });
+  }
+  document.getElementById("inbox").innerHTML = inbox;
+}
+
+createAccount();
+</script>
+</body>
+</html>
