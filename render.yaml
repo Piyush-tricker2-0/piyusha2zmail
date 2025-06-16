@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: piyush-a2z-mail
+    env: node
+    plan: free
+    envVars: []
+    buildCommand: npm install
+    startCommand: npm start
+    branch: main
