@@ -1,37 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Temp Mail</title>
+  <meta charset="UTF-8" />
+  <title>Piyush A2Z Mail</title>
+  <style>
+    body { font-family: Arial; background: #101010; color: #eee; text-align: center; padding: 20px; }
+    #email { font-size: 1.4rem; margin: 20px;}
+    button { margin: 10px; padding: 8px 16px; }
+    .mail { background: #222; padding: 12px; margin: 10px auto; border-radius: 6px; width: 90%; text-align: left;}
+  </style>
 </head>
 <body>
-  <h2>Temp Mail</h2>
-  <p>Email: <span id="email"></span></p>
-  <ul id="inbox"></ul>
+  <h1>Piyush A2Z Temporary Mail</h1>
+  <p id="email">Generating email…</p>
+  <button onclick="loadMails()">Check Inbox</button>
+  <div id="inbox"></div>
 
   <script>
-    let login, domain;
-    async function getMail() {
-      const res = await fetch("https://your-render-backend.onrender.com/generate");
-      const data = await res.json();
-      document.getElementById("email").innerText = data.email;
-      login = data.login;
-      domain = data.domain;
-    }
+    let token = "", email = "", password = "";
 
-    async function getInbox() {
-      const res = await fetch(`https://your-render-backend.onrender.com/inbox?login=${login}&domain=${domain}`);
-      const data = await res.json();
-      const inbox = document.getElementById("inbox");
-      inbox.innerHTML = "";
-      data.forEach(msg => {
-        const li = document.createElement("li");
-        li.innerText = `${msg.from} - ${msg.subject}`;
-        inbox.appendChild(li);
+    async function createAccount() {
+      password = Math.random().toString(36).substring(2, 10);
+      const domains = await fetch('/api/domains', { method: 'POST', body: '{}' }).then(r => r.json());
+      const domain = domains['hydra:member'][0].domain;
+      email = Math.random().toString(36).substring(2, 10) + '@' + domain;
+      document.getElementById('email').innerText = '📧 ' + email;
+
+      await fetch('/api/accounts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: email, password })
       });
+
+      const data = await fetch('/api/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: email, password })
+      }).then(r => r.json());
+      token = data.token;
+      loadMails();
     }
 
-    getMail();
-    setInterval(getInbox, 5000);
+    async function loadMails() {
+      const inboxEl = document.getElementById('inbox');
+      inboxEl.innerText = 'Checking…';
+      const data = await fetch('/api/messages', {
+        headers: { Authorization: 'Bearer ' + token }
+      }).then(r => r.json());
+
+      if (!data['hydra:member'] || data['hydra:member'].length === 0) {
+        inboxEl.innerHTML = '<p>No mails yet.</p>';
+        return;
+      }
+      inboxEl.innerHTML = data['hydra:member'].map(m =>
+        `<div class="mail"><b>From:</b> ${m.from.address}<br><b>Subject:</b> ${m.subject}</div>`
+      ).join('');
+    }
+
+    createAccount();
   </script>
 </body>
 </html>
