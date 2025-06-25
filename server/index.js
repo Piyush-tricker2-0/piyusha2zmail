@@ -1,10 +1,22 @@
+// server/index.js
 import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
-app.use(cors());
+const port = process.env.PORT || 3000;
 
+// Required for __dirname in ES Module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Middlewares
+app.use(cors());
+app.use(express.static(path.join(__dirname, "../client"))); // Serve frontend
+
+// Temp Mail APIs
 app.get("/generate", (req, res) => {
   const chars = "abcdefghijklmnopqrstuvwxyz1234567890";
   let name = "";
@@ -25,4 +37,11 @@ app.get("/read", async (req, res) => {
   res.json(await msg.json());
 });
 
-app.listen(3000, () => console.log("Server started on port 3000"));
+// Default route
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "../client/index.html"));
+});
+
+app.listen(port, () => {
+  console.log(`Server started on port ${port}`);
+});
